@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use App\Bootstrap\AppFactory;
+// Changed to lowercase 'bootstrap' to match your actual directory name on disk
+use App\bootstrap\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
