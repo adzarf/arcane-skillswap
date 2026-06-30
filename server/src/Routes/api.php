@@ -72,9 +72,9 @@ return function (App $app) {
 
     // ==================== BOOKING ENDPOINTS ====================
     $app->post('/api/bookings', BookingController::class . ':create')->add($auth);
-    $app->get('/api/bookings/{id}', BookingController::class . ':get');
     $app->get('/api/bookings/learner', BookingController::class . ':getLearnerBookings')->add($auth);
     $app->get('/api/bookings/tutor', BookingController::class . ':getTutorBookings')->add($auth);
+    $app->get('/api/bookings/{id}', BookingController::class . ':get');
     $app->patch('/api/bookings/{id}/accept', BookingController::class . ':accept')->add($auth);
     $app->patch('/api/bookings/{id}/decline', BookingController::class . ':decline')->add($auth);
     $app->patch('/api/bookings/{id}/confirm', BookingController::class . ':confirm')->add($auth);
@@ -93,8 +93,8 @@ return function (App $app) {
 
     // ==================== MESSAGE ENDPOINTS ====================
     $app->post('/api/messages', MessageController::class . ':send')->add($auth);
-    $app->get('/api/messages/{id}', MessageController::class . ':get');
     $app->get('/api/messages/unread-count', MessageController::class . ':getUnreadCount')->add($auth);
+    $app->get('/api/messages/{id}', MessageController::class . ':get');
     $app->get('/api/conversations/{other_user_id}', MessageController::class . ':getConversation')->add($auth);
     $app->patch('/api/messages/{id}/read', MessageController::class . ':markAsRead')->add($auth);
     $app->patch('/api/conversations/{sender_id}/read', MessageController::class . ':markConversationAsRead')->add($auth);
