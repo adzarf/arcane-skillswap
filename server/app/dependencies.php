@@ -39,12 +39,10 @@ use App\Services\MessageService;
 use App\Services\NotificationService;
 use App\Services\UserService;
 use App\Services\AdminService;
-use DI\ContainerBuilder;
 use PDO;
 use Psr\Container\ContainerInterface;
 
-return function (ContainerBuilder $containerBuilder) {
-    $containerBuilder->addDefinitions([
+return [
         'settings' => [
             'displayErrorDetails' => (getenv('APP_ENV') === 'development'),
         ],
@@ -142,5 +140,4 @@ return function (ContainerBuilder $containerBuilder) {
         NotificationController::class => fn (ContainerInterface $c) => new NotificationController($c->get(NotificationService::class)),
         UserController::class => fn (ContainerInterface $c) => new UserController($c->get(UserService::class)),
         AdminController::class => fn (ContainerInterface $c) => new AdminController($c->get(AdminService::class)),
-    ]);
-};
+];
