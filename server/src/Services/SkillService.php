@@ -89,7 +89,12 @@ class SkillService
 
     public function deleteSkill(int $id): void
     {
-        $this->getSkill($id); // Ensure exists
+        $this->getSkill($id);
         $this->repo->delete($id);
+    }
+
+    public function getTrending(int $limit = 10): array
+    {
+        return ['skills' => $this->repo->getTrending($limit)];
     }
 }

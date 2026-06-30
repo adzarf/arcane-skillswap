@@ -11,11 +11,19 @@ class BookingService
 {
     private BookingRepository $repo;
     private UserSkillRepository $userSkillRepo;
+    private WalletService $walletService;
+    private NotificationService $notificationService;
 
-    public function __construct(BookingRepository $repo, UserSkillRepository $userSkillRepo)
-    {
+    public function __construct(
+        BookingRepository $repo,
+        UserSkillRepository $userSkillRepo,
+        WalletService $walletService,
+        NotificationService $notificationService
+    ) {
         $this->repo = $repo;
         $this->userSkillRepo = $userSkillRepo;
+        $this->walletService = $walletService;
+        $this->notificationService = $notificationService;
     }
 
     public function requestBooking(int $learnerId, array $data): Booking
@@ -42,7 +50,6 @@ class BookingService
             throw new \Exception('Invalid time range');
         }
 
-        // Calculate amount based on hourly rate
         $hours = ($end - $start) / 3600;
         $amount = $userSkill->hourly_rate * $hours;
 
@@ -58,6 +65,13 @@ class BookingService
 
         $id = $this->repo->create($booking);
         $booking->id = $id;
+
+        $this->notificationService->createNotification(
+            $userSkill->user_id,
+            'booking.requested',
+            ['booking_id' => $id, 'learner_id' => $learnerId]
+        );
+
         return $booking;
     }
 
@@ -78,6 +92,13 @@ class BookingService
         }
         $booking->status = 'accepted';
         $this->repo->update($id, $booking);
+
+        $this->notificationService->createNotification(
+            $booking->learner_id,
+            'booking.accepted',
+            ['booking_id' => $id]
+        );
+
         return $booking;
     }
 
@@ -89,6 +110,13 @@ class BookingService
         }
         $booking->status = 'declined';
         $this->repo->update($id, $booking);
+
+        $this->notificationService->createNotification(
+            $booking->learner_id,
+            'booking.declined',
+            ['booking_id' => $id]
+        );
+
         return $booking;
     }
 
@@ -98,8 +126,22 @@ class BookingService
         if ($booking->status !== 'accepted') {
             throw new \Exception('Only accepted bookings can be confirmed');
         }
+
+        if (!$this->walletService->hasSufficientBalance($booking->learner_id, (float)$booking->amount)) {
+            throw new \Exception('Insufficient wallet balance');
+        }
+
+        $this->walletService->debitLearner($booking->learner_id, (float)$booking->amount, "Booking #{$id} payment");
+
         $booking->status = 'confirmed';
         $this->repo->update($id, $booking);
+
+        $this->notificationService->createNotification(
+            $booking->tutor_id,
+            'booking.confirmed',
+            ['booking_id' => $id]
+        );
+
         return $booking;
     }
 
@@ -109,8 +151,23 @@ class BookingService
         if ($booking->status !== 'confirmed') {
             throw new \Exception('Only confirmed bookings can be completed');
         }
+
         $booking->status = 'completed';
         $this->repo->update($id, $booking);
+
+        $this->walletService->creditTutorEarnings($booking->tutor_id, (float)$booking->amount);
+
+        $this->notificationService->createNotification(
+            $booking->learner_id,
+            'booking.completed',
+            ['booking_id' => $id]
+        );
+        $this->notificationService->createNotification(
+            $booking->tutor_id,
+            'booking.completed',
+            ['booking_id' => $id]
+        );
+
         return $booking;
     }
 
@@ -120,8 +177,14 @@ class BookingService
         if (in_array($booking->status, ['completed', 'cancelled'], true)) {
             throw new \Exception('Cannot cancel completed or already cancelled bookings');
         }
+
+        if ($booking->status === 'confirmed') {
+            $this->walletService->refundLearner($booking->learner_id, (float)$booking->amount, "Booking #{$id} refund");
+        }
+
         $booking->status = 'cancelled';
         $this->repo->update($id, $booking);
+
         return $booking;
     }
 

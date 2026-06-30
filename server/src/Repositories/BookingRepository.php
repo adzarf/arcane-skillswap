@@ -80,4 +80,27 @@ class BookingRepository
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map(fn($row) => new Booking($row), $rows);
     }
+
+    public function findAll(int $limit = 50, int $offset = 0): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(fn($row) => new Booking($row), $rows);
+    }
+
+    public function countAll(): int
+    {
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM bookings');
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM bookings WHERE status = :status');
+        $stmt->execute([':status' => $status]);
+        return (int)$stmt->fetchColumn();
+    }
 }

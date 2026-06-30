@@ -74,6 +74,13 @@ class SkillController
         return ResponseHelper::json($response, true, 'Skills filtered', $result);
     }
 
+    public function trending(Request $request, Response $response): Response
+    {
+        $limit = min(50, max(1, (int)($request->getQueryParams()['limit'] ?? 10)));
+        $result = $this->skillService->getTrending($limit);
+        return ResponseHelper::json($response, true, 'Trending skills', $result);
+    }
+
     public function update(Request $request, Response $response, array $args): Response
     {
         $data = (array)$request->getParsedBody();

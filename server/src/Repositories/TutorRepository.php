@@ -28,7 +28,7 @@ class TutorRepository
         }
 
         if (isset($filters['min_rating']) && $filters['min_rating'] !== null) {
-            $where[] = 'COALESCE(u.avg_rating, 0) >= :min_rating';
+            $where[] = '(SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN bookings b ON r.booking_id = b.id WHERE b.tutor_id = u.id) >= :min_rating';
             $params[':min_rating'] = (float)$filters['min_rating'];
         }
 
@@ -47,19 +47,23 @@ class TutorRepository
             $params[':experience_level'] = $filters['experience_level'];
         }
 
-        $orderBy = match($sort) {
-            'rating' => 'u.avg_rating DESC, u.total_sessions DESC',
+        $avgRatingSub = '(SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN bookings b ON r.booking_id = b.id WHERE b.tutor_id = u.id)';
+        $sessionsSub = "(SELECT COUNT(*) FROM bookings b WHERE b.tutor_id = u.id AND b.status = 'completed')";
+
+        $orderBy = match ($sort) {
+            'rating' => "{$avgRatingSub} DESC, {$sessionsSub} DESC",
             'price' => 'us.hourly_rate ASC',
-            'popular' => 'u.total_sessions DESC',
-            default => 'u.avg_rating DESC',
+            'popular' => "{$sessionsSub} DESC",
+            default => "{$avgRatingSub} DESC",
         };
 
         $whereClause = implode(' AND ', $where);
-        $sql = "SELECT u.id, u.first_name, u.last_name, u.bio, u.profile_photo, u.faculty, u.avg_rating, u.total_sessions, 
-                us.id as user_skill_id, us.hourly_rate, us.experience_level, us.description
-                FROM user_skills us 
+        $sql = "SELECT u.id, u.first_name, u.last_name, u.bio, u.profile_photo, u.faculty,
+                {$avgRatingSub} AS avg_rating, {$sessionsSub} AS total_sessions,
+                us.id AS user_skill_id, us.hourly_rate, us.experience_level, us.description
+                FROM user_skills us
                 JOIN users u ON us.user_id = u.id
-                WHERE {$whereClause}
+                WHERE u.is_active = 1 AND {$whereClause}
                 ORDER BY {$orderBy}
                 LIMIT :limit OFFSET :offset";
 
@@ -89,7 +93,7 @@ class TutorRepository
         }
 
         if (isset($filters['min_rating']) && $filters['min_rating'] !== null) {
-            $where[] = 'COALESCE(u.avg_rating, 0) >= :min_rating';
+            $where[] = '(SELECT COALESCE(AVG(r.rating), 0) FROM reviews r JOIN bookings b ON r.booking_id = b.id WHERE b.tutor_id = u.id) >= :min_rating';
             $params[':min_rating'] = (float)$filters['min_rating'];
         }
 
@@ -98,7 +102,7 @@ class TutorRepository
             $params[':max_rate'] = (float)$filters['max_rate'];
         }
 
-        if (isset($filters['min_rate'] && $filters['min_rate'] !== null) {
+        if (isset($filters['min_rate']) && $filters['min_rate'] !== null) {
             $where[] = 'us.hourly_rate >= :min_rate';
             $params[':min_rate'] = (float)$filters['min_rate'];
         }

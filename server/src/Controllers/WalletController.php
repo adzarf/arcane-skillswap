@@ -45,4 +45,17 @@ class WalletController
         $result = $this->walletService->getTransactionHistory($userId, $page, $perPage);
         return ResponseHelper::json($response, true, 'Transactions retrieved', $result);
     }
+
+    public function getReport(Request $request, Response $response): Response
+    {
+        $jwt = $request->getAttribute('jwt');
+        $userId = $jwt->sub ?? null;
+
+        if (!$userId) {
+            return ResponseHelper::json($response, false, 'Unauthorized', null, [])->withStatus(401);
+        }
+
+        $report = $this->walletService->getWalletReport($userId);
+        return ResponseHelper::json($response, true, 'Wallet report', $report);
+    }
 }

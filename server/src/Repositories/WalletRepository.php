@@ -92,4 +92,47 @@ class WalletRepository
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map(fn($row) => new WalletTransaction($row), $rows);
     }
+
+    public function getPlatformReport(): array
+    {
+        $summaryStmt = $this->pdo->query(
+            'SELECT SUM(w.balance) AS total_wallet_balance, COUNT(DISTINCT w.user_id) AS wallet_holders FROM wallets w'
+        );
+        $summary = $summaryStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        $creditStmt = $this->pdo->query(
+            "SELECT COALESCE(SUM(amount), 0) AS total FROM wallet_transactions WHERE type = 'credit'"
+        );
+        $debitStmt = $this->pdo->query(
+            "SELECT COALESCE(SUM(amount), 0) AS total FROM wallet_transactions WHERE type = 'debit'"
+        );
+        $summary['total_credits'] = (float)($creditStmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+        $summary['total_debits'] = (float)($debitStmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+
+        $stmt = $this->pdo->query(
+            'SELECT wt.*, w.user_id FROM wallet_transactions wt
+             JOIN wallets w ON wt.wallet_id = w.id
+             ORDER BY wt.created_at DESC LIMIT 20'
+        );
+        $recent = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'summary' => $summary,
+            'recent_transactions' => $recent,
+        ];
+    }
+
+    public function getPlatformCommissionTotal(): float
+    {
+        $stmt = $this->pdo->query(
+            "SELECT COALESCE(SUM(amount), 0) FROM wallet_transactions WHERE description LIKE '%commission%'"
+        );
+        return (float)$stmt->fetchColumn();
+    }
+
+    public function hasSufficientBalance(int $userId, float $amount): bool
+    {
+        $wallet = $this->getOrCreate($userId);
+        return $this->getBalance($wallet->id) >= $amount;
+    }
 }

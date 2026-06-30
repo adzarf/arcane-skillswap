@@ -5,17 +5,23 @@ namespace App\Services;
 
 use App\Repositories\UserRepository;
 use App\Repositories\ReviewRepository;
+use App\Repositories\WalletRepository;
 use App\Models\User;
 
 class UserService
 {
     private UserRepository $repo;
     private ReviewRepository $reviewRepo;
+    private WalletRepository $walletRepo;
 
-    public function __construct(UserRepository $repo, ReviewRepository $reviewRepo)
-    {
+    public function __construct(
+        UserRepository $repo,
+        ReviewRepository $reviewRepo,
+        WalletRepository $walletRepo
+    ) {
         $this->repo = $repo;
         $this->reviewRepo = $reviewRepo;
+        $this->walletRepo = $walletRepo;
     }
 
     public function getUser(int $id): User
@@ -62,8 +68,11 @@ class UserService
 
         return [
             'user' => $user,
+            'roles' => $this->repo->getRoles($id),
             'average_rating' => $avgRating,
             'total_reviews' => $reviewCount,
+            'total_sessions' => $this->repo->countCompletedSessionsForTutor($id),
+            'earnings' => $this->walletRepo->getBalance($this->walletRepo->getOrCreate($id)->id),
         ];
     }
 

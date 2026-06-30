@@ -1,4 +1,4 @@
--- SkillSwap MySQL schema (simplified core tables for demo)
+-- SkillSwap MySQL schema
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
@@ -10,8 +10,12 @@ CREATE TABLE IF NOT EXISTS users (
   faculty VARCHAR(150),
   year VARCHAR(50),
   is_active TINYINT(1) DEFAULT 1,
+  password_reset_token VARCHAR(255) NULL,
+  password_reset_expires DATETIME NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_users_active (is_active),
+  INDEX idx_users_faculty (faculty)
 );
 
 CREATE TABLE IF NOT EXISTS roles (
@@ -75,13 +79,14 @@ CREATE TABLE IF NOT EXISTS bookings (
 
 CREATE TABLE IF NOT EXISTS reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  booking_id INT NOT NULL,
+  booking_id INT NOT NULL UNIQUE,
   reviewer_id INT NOT NULL,
-  rating TINYINT NOT NULL,
+  rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
-  FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_reviews_reviewer (reviewer_id)
 );
 
 CREATE TABLE IF NOT EXISTS messages (

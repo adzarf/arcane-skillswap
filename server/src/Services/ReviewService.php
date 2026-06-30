@@ -11,11 +11,16 @@ class ReviewService
 {
     private ReviewRepository $repo;
     private BookingRepository $bookingRepo;
+    private NotificationService $notificationService;
 
-    public function __construct(ReviewRepository $repo, BookingRepository $bookingRepo)
-    {
+    public function __construct(
+        ReviewRepository $repo,
+        BookingRepository $bookingRepo,
+        NotificationService $notificationService
+    ) {
         $this->repo = $repo;
         $this->bookingRepo = $bookingRepo;
+        $this->notificationService = $notificationService;
     }
 
     public function createReview(int $reviewerId, array $data): Review
@@ -59,6 +64,13 @@ class ReviewService
 
         $id = $this->repo->create($review);
         $review->id = $id;
+
+        $this->notificationService->createNotification(
+            $booking->tutor_id,
+            'review.created',
+            ['review_id' => $id, 'booking_id' => $bookingId, 'rating' => $rating]
+        );
+
         return $review;
     }
 

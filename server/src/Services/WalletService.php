@@ -9,7 +9,7 @@ use App\Models\Wallet;
 class WalletService
 {
     private WalletRepository $repo;
-    private float $platformCommission; // e.g., 0.10 for 10%
+    private float $platformCommission;
 
     public function __construct(WalletRepository $repo, float $platformCommission = 0.10)
     {
@@ -28,7 +28,28 @@ class WalletService
         $tutorEarnings = $bookingAmount - $commission;
 
         $wallet = $this->repo->getOrCreate($tutorId);
-        $this->repo->credit($wallet->id, $tutorEarnings, "Booking payment (10% commission deducted)");
+        $this->repo->credit($wallet->id, $tutorEarnings, 'Booking payment (10% platform commission deducted)');
+    }
+
+    public function debitLearner(int $learnerId, float $amount, string $description = ''): void
+    {
+        if (!$this->repo->hasSufficientBalance($learnerId, $amount)) {
+            throw new \Exception('Insufficient wallet balance');
+        }
+
+        $wallet = $this->repo->getOrCreate($learnerId);
+        $this->repo->debit($wallet->id, $amount, $description);
+    }
+
+    public function refundLearner(int $learnerId, float $amount, string $description = ''): void
+    {
+        $wallet = $this->repo->getOrCreate($learnerId);
+        $this->repo->credit($wallet->id, $amount, $description);
+    }
+
+    public function hasSufficientBalance(int $userId, float $amount): bool
+    {
+        return $this->repo->hasSufficientBalance($userId, $amount);
     }
 
     public function getWalletBalance(int $userId): float
@@ -47,6 +68,29 @@ class WalletService
             'balance' => $this->repo->getBalance($wallet->id),
             'page' => $page,
             'per_page' => $perPage,
+        ];
+    }
+
+    public function getWalletReport(int $userId): array
+    {
+        $wallet = $this->repo->getOrCreate($userId);
+        $transactions = $this->repo->getTransactions($wallet->id, 100, 0);
+
+        $credits = 0.0;
+        $debits = 0.0;
+        foreach ($transactions as $tx) {
+            if ($tx->type === 'credit') {
+                $credits += $tx->amount;
+            } else {
+                $debits += $tx->amount;
+            }
+        }
+
+        return [
+            'balance' => $this->repo->getBalance($wallet->id),
+            'total_credits' => $credits,
+            'total_debits' => $debits,
+            'transaction_count' => count($transactions),
         ];
     }
 }

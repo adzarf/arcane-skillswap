@@ -15,6 +15,8 @@ class User
     public ?string $faculty = null;
     public ?string $year = null;
     public bool $is_active = true;
+    public ?string $password_reset_token = null;
+    public ?string $password_reset_expires = null;
     public string $created_at;
     public string $updated_at;
 

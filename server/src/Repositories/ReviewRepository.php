@@ -80,4 +80,16 @@ class ReviewRepository
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)$row['cnt'];
     }
+
+    public function countAll(): int
+    {
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM reviews');
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function delete(int $id): void
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM reviews WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+    }
 }

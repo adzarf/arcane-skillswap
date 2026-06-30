@@ -88,4 +88,22 @@ class SkillRepository
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)$row['cnt'];
     }
+
+    public function getTrending(int $limit = 10): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT s.*, COUNT(us.id) AS tutor_count, COUNT(b.id) AS booking_count
+             FROM skills s
+             LEFT JOIN user_skills us ON s.id = us.skill_id
+             LEFT JOIN bookings b ON us.id = b.user_skill_id AND b.status = :completed
+             GROUP BY s.id
+             ORDER BY booking_count DESC, tutor_count DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':completed', 'completed');
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

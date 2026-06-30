@@ -4,15 +4,18 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\UserSkillRepository;
+use App\Repositories\UserRepository;
 use App\Models\UserSkill;
 
 class UserSkillService
 {
     private UserSkillRepository $repo;
+    private UserRepository $userRepo;
 
-    public function __construct(UserSkillRepository $repo)
+    public function __construct(UserSkillRepository $repo, UserRepository $userRepo)
     {
         $this->repo = $repo;
+        $this->userRepo = $userRepo;
     }
 
     public function createSkillOffering(int $userId, array $data): UserSkill
@@ -34,6 +37,7 @@ class UserSkillService
 
         $id = $this->repo->create($userSkill);
         $userSkill->id = $id;
+        $this->userRepo->assignRole($userId, 'Tutor');
         return $userSkill;
     }
 

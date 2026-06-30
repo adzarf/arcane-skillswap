@@ -9,10 +9,12 @@ use App\Models\Message;
 class MessageService
 {
     private MessageRepository $repo;
+    private NotificationService $notificationService;
 
-    public function __construct(MessageRepository $repo)
+    public function __construct(MessageRepository $repo, NotificationService $notificationService)
     {
         $this->repo = $repo;
+        $this->notificationService = $notificationService;
     }
 
     public function sendMessage(int $senderId, int $recipientId, string $content): Message
@@ -33,6 +35,13 @@ class MessageService
 
         $id = $this->repo->create($message);
         $message->id = $id;
+
+        $this->notificationService->createNotification(
+            $recipientId,
+            'message.received',
+            ['message_id' => $id, 'sender_id' => $senderId]
+        );
+
         return $message;
     }
 
