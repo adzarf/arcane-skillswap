@@ -22,9 +22,15 @@ class AuthMiddleware implements Middleware
     public function process(Request $request, RequestHandler $handler): Response
     {
         $auth = $request->getHeaderLine('Authorization');
+
+        // Debug: log what we actually received
+        error_log('AuthMiddleware - Authorization header: ' . substr($auth, 0, 50));
+        error_log('AuthMiddleware - Method: ' . $request->getMethod());
+        error_log('AuthMiddleware - Path: ' . $request->getUri()->getPath());
+
         if (! $auth || ! str_starts_with($auth, 'Bearer ')) {
             $response = new \Slim\Psr7\Response();
-            return ResponseHelper::json($response, false, 'Unauthorized', null, [])->withStatus(401);
+            return ResponseHelper::json($response, false, 'Unauthorized - no bearer: ' . substr($auth, 0, 30), null, [])->withStatus(401);
         }
 
         $token = substr($auth, 7);
@@ -34,8 +40,7 @@ class AuthMiddleware implements Middleware
             return $handler->handle($request);
         } catch (\Throwable $e) {
             $response = new \Slim\Psr7\Response();
-            // Temporarily expose error reason for debugging
-            return ResponseHelper::json($response, false, 'Invalid token: ' . $e->getMessage(), null, [])->withStatus(401);
+            return ResponseHelper::json($response, false, 'Invalid token: ' . $e->getMessage() . ' | token_start: ' . substr($token, 0, 30), null, [])->withStatus(401);
         }
     }
 }
