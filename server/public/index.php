@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require __DIR__ . '/../vendor/autoload.php';
 
-\Dotenv\Dotenv::createImmutable(__DIR__ . '/..')->safeLoad();
+\Dotenv\Dotenv::createMutable(__DIR__ . '/..')->safeLoad();
 
 // Load AppFactory directly to avoid autoloader path issues
 require_once __DIR__ . '/../bootstrap/AppFactory.php';
