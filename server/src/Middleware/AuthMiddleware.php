@@ -34,7 +34,8 @@ class AuthMiddleware implements Middleware
             return $handler->handle($request);
         } catch (\Throwable $e) {
             $response = new \Slim\Psr7\Response();
-            return ResponseHelper::json($response, false, 'Invalid token', null, [])->withStatus(401);
+            // Temporarily expose error reason for debugging
+            return ResponseHelper::json($response, false, 'Invalid token: ' . $e->getMessage(), null, [])->withStatus(401);
         }
     }
 }
