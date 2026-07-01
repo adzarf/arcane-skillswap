@@ -31,7 +31,11 @@ return function (App $app) {
 
     // Handle CORS preflight OPTIONS requests for all routes
     $app->options('/{routes:.+}', function ($request, $response) {
-        return $response;
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+            ->withStatus(200);
     });
 
     // ==================== AUTH ENDPOINTS ====================
