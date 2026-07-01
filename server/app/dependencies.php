@@ -44,27 +44,27 @@ use Psr\Container\ContainerInterface;
 
 return [
         'settings' => [
-            'displayErrorDetails' => (getenv('APP_ENV') === 'development'),
+           'displayErrorDetails' => (($_ENV['APP_ENV'] ?? getenv('APP_ENV')) === 'development'),
         ],
 
         PDO::class => function () {
             $db = new Database([
-                'host' => getenv('DB_HOST') ?: 'localhost',
-                'port' => (int)(getenv('DB_PORT') ?: '3306'),
-                'database' => getenv('DB_DATABASE') ?: 'skillswap',
-                'username' => getenv('DB_USERNAME') ?: 'root',
-                'password' => getenv('DB_PASSWORD') ?: '',
+                'host' => $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'localhost',
+'port' => (int)($_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306'),
+'database' => $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE') ?: 'skillswap',
+'username' => $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME') ?: 'root',
+'password' => $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: '',
             ]);
             return $db->getPdo();
         },
 
-        JwtHelper::class => function () {
-            return new JwtHelper([
-                'secret' => getenv('JWT_SECRET') ?: 'dev-secret-key',
-                'issuer' => getenv('JWT_ISSUER') ?: 'skillswap.local',
-                'audience' => getenv('JWT_AUDIENCE') ?: 'skillswap.local',
-            ]);
-        },
+       JwtHelper::class => function () {
+    return new JwtHelper([
+        'secret' => $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?: 'dev-secret-key',
+        'issuer' => $_ENV['JWT_ISSUER'] ?? getenv('JWT_ISSUER') ?: 'skillswap.local',
+        'audience' => $_ENV['JWT_AUDIENCE'] ?? getenv('JWT_AUDIENCE') ?: 'skillswap.local',
+    ]);
+},
 
         UserRepository::class => fn (ContainerInterface $c) => new UserRepository($c->get(PDO::class)),
         SkillRepository::class => fn (ContainerInterface $c) => new SkillRepository($c->get(PDO::class)),
@@ -83,8 +83,8 @@ return [
                 $c->get(UserRepository::class),
                 $c->get(JwtHelper::class),
                 $c->get(PDO::class),
-                (int)(getenv('JWT_ACCESS_TTL') ?: '900'),
-                (int)(getenv('JWT_REFRESH_TTL') ?: '604800'),
+                (int)($_ENV['JWT_ACCESS_TTL'] ?? getenv('JWT_ACCESS_TTL') ?: '900'),
+(int)($_ENV['JWT_REFRESH_TTL'] ?? getenv('JWT_REFRESH_TTL') ?: '604800'),
             );
         },
         SkillService::class => fn (ContainerInterface $c) => new SkillService($c->get(SkillRepository::class)),
@@ -95,7 +95,7 @@ return [
         TutorDiscoveryService::class => fn (ContainerInterface $c) => new TutorDiscoveryService($c->get(TutorRepository::class)),
         AvailabilitySlotService::class => fn (ContainerInterface $c) => new AvailabilitySlotService($c->get(AvailabilitySlotRepository::class)),
         WalletService::class => function (ContainerInterface $c) {
-            $commission = (float)(getenv('PLATFORM_COMMISSION') ?: '0.10');
+            $commission = (float)($_ENV['PLATFORM_COMMISSION'] ?? getenv('PLATFORM_COMMISSION') ?: '0.10');
             return new WalletService($c->get(WalletRepository::class), $commission);
         },
         NotificationService::class => fn (ContainerInterface $c) => new NotificationService($c->get(NotificationRepository::class)),
