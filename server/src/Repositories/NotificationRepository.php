@@ -50,7 +50,7 @@ class NotificationRepository
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return array_map(fn($row) => {
+        return array_map(function ($row) {
             if ($row['data']) {
                 $row['data'] = json_decode($row['data'], true);
             }
