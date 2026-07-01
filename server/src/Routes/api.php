@@ -29,6 +29,11 @@ return function (App $app) {
     $app->add(new CorsMiddleware());
     $app->add(new RateLimitMiddleware(200, 60));
 
+    // Handle CORS preflight OPTIONS requests for all routes
+    $app->options('/{routes:.+}', function ($request, $response) {
+        return $response;
+    });
+
     // ==================== AUTH ENDPOINTS ====================
     $app->post('/api/auth/register', AuthController::class . ':register');
     $app->post('/api/auth/login', AuthController::class . ':login');
