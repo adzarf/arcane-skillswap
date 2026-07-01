@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-
+ 
 namespace App\Models;
-
+ 
 class User
 {
     public ?int $id = null;
@@ -19,12 +19,17 @@ class User
     public ?string $password_reset_expires = null;
     public string $created_at;
     public string $updated_at;
-
+ 
     public function __construct(array $data = [])
     {
         foreach ($data as $k => $v) {
             if (property_exists($this, $k)) {
-                $this->{$k} = $v;
+                // Cast is_active from MySQL int (0/1) to bool
+                if ($k === 'is_active') {
+                    $this->{$k} = (bool) $v;
+                } else {
+                    $this->{$k} = $v;
+                }
             }
         }
     }
