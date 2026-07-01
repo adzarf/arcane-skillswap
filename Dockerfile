@@ -13,7 +13,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-RUN pnpm build
+RUN pnpm run build-only
 
 # Stage 2: serve with nginx
 FROM nginx:alpine
