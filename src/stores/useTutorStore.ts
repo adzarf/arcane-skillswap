@@ -17,7 +17,7 @@ function toTutor(row: BackendTutorSearchResult, skillId: number, skillName: stri
     userSkillId: 0, // filled in by hydrateUserSkillIds() — needed to create a booking
     name: `${row.first_name} ${row.last_name}`.trim(),
     faculty: row.faculty ?? '',
-    avgRating: row.avg_rating,
+    avgRating: Number(row.avg_rating) || 0,
     totalSessions: row.total_sessions,
     rate: row.hourly_rate,
     skillId,
