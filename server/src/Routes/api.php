@@ -38,6 +38,18 @@ return function (App $app) {
             ->withStatus(200);
     });
 
+    $app->get('/api/debug-env', function ($request, $response) {
+    $data = [
+        'JWT_SECRET_preview' => substr($_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?: 'NOT SET', 0, 6) . '...',
+        'JWT_ISSUER' => $_ENV['JWT_ISSUER'] ?? getenv('JWT_ISSUER') ?: 'NOT SET',
+        'JWT_AUDIENCE' => $_ENV['JWT_AUDIENCE'] ?? getenv('JWT_AUDIENCE') ?: 'NOT SET',
+        'APP_ENV' => $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'NOT SET',
+    ];
+    $response->getBody()->write(json_encode($data));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+
     // ==================== AUTH ENDPOINTS ====================
     $app->post('/api/auth/register', AuthController::class . ':register');
     $app->post('/api/auth/login', AuthController::class . ':login');
