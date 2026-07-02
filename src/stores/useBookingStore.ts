@@ -29,9 +29,9 @@ function toBooking(b: BackendBooking, myUserId: number): Booking {
     id: String(b.id),
     tutorId: b.tutor_id,
     learnerId: b.learner_id,
-    learnerName: '',   // resolved later from profile if needed
-    tutorName: '',     // resolved later from profile if needed
-    skillName: '',     // backend doesn't embed skill name in booking rows
+    learnerName: b.learner_name || '',
+    tutorName: b.tutor_name || '',
+    skillName: b.skill_name || '',
     date: parts.date,
     time: parts.time,
     duration: Math.round(hours * 2) / 2, // round to nearest 0.5hr

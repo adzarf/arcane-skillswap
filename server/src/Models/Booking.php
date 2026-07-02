@@ -14,6 +14,9 @@ class Booking
     public string $status = 'pending';
     public float $amount = 0.0;
     public string $created_at;
+    public ?string $learner_name = null;
+    public ?string $tutor_name = null;
+    public ?string $skill_name = null;
 
     public function __construct(array $data = [])
     {

@@ -40,7 +40,17 @@ class BookingRepository
 
     public function findByLearner(int $learnerId, int $limit = 50, int $offset = 0): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM bookings WHERE learner_id = :learner_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset');
+        $sql = 'SELECT b.*,
+                    CONCAT(u.first_name, \' \', u.last_name) AS tutor_name,
+                    s.name AS skill_name
+                FROM bookings b
+                LEFT JOIN users u ON u.id = b.tutor_id
+                LEFT JOIN user_skills us ON us.id = b.user_skill_id
+                LEFT JOIN skills s ON s.id = us.skill_id
+                WHERE b.learner_id = :learner_id
+                ORDER BY b.created_at DESC
+                LIMIT :limit OFFSET :offset';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':learner_id', $learnerId);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -48,10 +58,22 @@ class BookingRepository
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return array_map(fn($row) => new Booking($row), $rows);
     }
+        return array_map(fn($row) => new Booking($row), $rows);
+    }
 
     public function findByTutor(int $tutorId, int $limit = 50, int $offset = 0): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM bookings WHERE tutor_id = :tutor_id ORDER BY created_at DESC LIMIT :limit OFFSET :offset');
+        $sql = 'SELECT b.*,
+                    CONCAT(u.first_name, \' \', u.last_name) AS learner_name,
+                    s.name AS skill_name
+                FROM bookings b
+                LEFT JOIN users u ON u.id = b.learner_id
+                LEFT JOIN user_skills us ON us.id = b.user_skill_id
+                LEFT JOIN skills s ON s.id = us.skill_id
+                WHERE b.tutor_id = :tutor_id
+                ORDER BY b.created_at DESC
+                LIMIT :limit OFFSET :offset';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':tutor_id', $tutorId);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
