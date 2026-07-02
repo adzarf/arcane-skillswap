@@ -22,7 +22,7 @@ function toMessage(m: BackendMessage, myUserId: number): Message {
     toUserId: m.recipient_id,
     from: m.sender_id === myUserId ? 'me' : 'them',
     body: m.content,
-    sentAt: m.created_at,
+    sentAt: m.created_at ? m.created_at.replace(' ', 'T') : '',
   }
 }
 
@@ -53,7 +53,10 @@ export const useMessageStore = defineStore('message', {
       try {
         const [{ messages }, profileResult] = await Promise.all([
           messageApi.conversation(otherUserId),
-          userApi.getProfile(otherUserId).catch(() => null),
+          fetch(`${import.meta.env.VITE_API_BASE_URL ?? 'https://arcane-skillswap-production.up.railway.app/api'}/users/${otherUserId}`)
+            .then(r => r.json())
+            .then(d => d.data)
+            .catch(() => null),
         ])
         if (profileResult) {
           const u = profileResult.user
